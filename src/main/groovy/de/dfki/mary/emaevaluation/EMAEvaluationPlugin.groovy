@@ -30,46 +30,6 @@ class EMAEvaluationPlugin implements Plugin<Project>
 
         project.sourceCompatibility = JavaVersion.VERSION_1_7
 
-        (new File(project.rootProject.buildDir.toString() + "/EMAAnalysis")).mkdirs()
-
-        project.ext {
-            // User configuration
-            user_configuration = config;
-
-            emaOutputDir = new File(project.rootProject.buildDir.toString() + "/EMAAnalysis")
-
-            // FIXME: externalize that !
-            list_file = new File(DataFileFinder.getFilePath("list_test"))
-            channels =
-
-            nb_proc = nb_proc_local;
-
-            loading = new LoadingHelpers();
-        }
-
-        project.status = project.version.endsWith('SNAPSHOT') ? 'integration' : 'release'
-
-        project.repositories {
-            jcenter()
-            maven {
-                url 'http://oss.jfrog.org/artifactory/repo'
-            }
-        }
-
-        project.configurations.create 'legacy'
-
-        project.sourceSets {
-            main {
-                java {
-                    // srcDir project.generatedSrcDir
-                }
-            }
-            test {
-                java {
-                    // srcDir project.generatedTestSrcDir
-                }
-            }
-        }
 
         project.afterEvaluate {
 
@@ -101,7 +61,7 @@ class EMAEvaluationPlugin implements Plugin<Project>
 
                 def input_rms_ema = project.computeRMSEEMA.output_f
                 def ema_input_file = []
-                project.channels.each { c ->
+                project.configurationEMA.channels.each { c ->
                     ema_input_file << new File("${project.configurationEMA.output_dir}/euc_dist_${c}.csv")
                 }
 
@@ -141,7 +101,7 @@ class EMAEvaluationPlugin implements Plugin<Project>
                         dist = new Double[values.size()];
                         values.toArray(dist);
                         s = new Statistics(dist);
-                        output_f << "euc dist ${project.channels[i]} (cm)\t" << s.mean() << "\t" << s.stddev() << "\t" << s.confint(0.05) << "\n"
+                        output_f << "euc dist ${project.configurationEMA.channels[i]} (cm)\t" << s.mean() << "\t" << s.stddev() << "\t" << s.confint(0.05) << "\n"
                     }
                 }
             }

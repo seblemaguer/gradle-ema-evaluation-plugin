@@ -16,8 +16,8 @@ class EMAAnalysis implements AnalysisInterface
         project.task("computeRMSEEMA") {
 
             // FIXME: input file ?
-            def output_f = new File("${project.configurationEMA.output_dir}/rms_ema.csv")
-            outputs.files output_f
+            ext.output_f = new File("${project.configurationEMA.output_dir}/rms_ema.csv")
+            outputs.files ext.output_f
 
             doLast {
                 output_f.text = "#id\trmse (mm)\n"
@@ -76,7 +76,7 @@ class EMAAnalysis implements AnalysisInterface
                             for (int k=0; k<3; k++)
                             {
                                 real_src[i][k] = src[i][j+k]
-                                real_tgt[i][k] = tgt[i][j+k] / 10 // FIXME: hardcoded mm => cm
+                                real_tgt[i][k] = tgt[i][j+k] // FIXME: hardcoded mm => cm
                             }
                         }
 
