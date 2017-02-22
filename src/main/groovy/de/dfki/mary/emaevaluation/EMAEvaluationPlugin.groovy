@@ -111,15 +111,21 @@ class EMAEvaluationPlugin implements Plugin<Project>
 
                 def input_rms_ema = new File("${project.emaOutputDir}/rms_ema.csv")
 
+                def ema_input_file = []
+                project.channels.each { c ->
+                    ema_input_file << new File("${project.emaOutputDir}/euc_dist_${c}.csv")
+                }
 
                 def output_f = new File("${project.emaOutputDir}/global_report.csv")
                 outputs.files output_f
 
                 doLast {
-
+                    def values = null
+                    def dist = null
+                    def s = null
                     output_f.text = "#id\tmean\tstd\tconfint\n"
 
-                    // RMS F0 part
+                    // RMS part
                     values = []
                     input_rms_ema.eachLine { line ->
                         if (line.startsWith("#"))
@@ -132,6 +138,22 @@ class EMAEvaluationPlugin implements Plugin<Project>
                     values.toArray(dist);
                     s = new Statistics(dist);
                     output_f << "rms ema\t" << s.mean() << "\t" << s.stddev() << "\t" << s.confint(0.05) << "\n"
+
+                    // Euclidian distances part
+                    ema_input_file.eachWithIndex { c_file, i ->
+
+                        values = []
+                        c_file.eachLine { line ->
+                            if (line.startsWith("#"))
+                                return; // Continue...
+
+                                values << Double.parseDouble(line)
+                        }
+                        dist = new Double[values.size()];
+                        values.toArray(dist);
+                        s = new Statistics(dist);
+                        output_f << "euc dist ${project.channels[i]} (cm)\t" << s.mean() << "\t" << s.stddev() << "\t" << s.confint(0.05) << "\n"
+                    }
                 }
             }
         }
