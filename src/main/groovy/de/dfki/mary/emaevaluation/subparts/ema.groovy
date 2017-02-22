@@ -16,27 +16,27 @@ class EMAAnalysis implements AnalysisInterface
         project.task("computeRMSEEMA") {
 
             // FIXME: input file ?
-            def output_f = new File("${project.emaOutputDir}/rms_ema.csv")
+            def output_f = new File("${project.configurationEMA.output_dir}/rms_ema.csv")
             outputs.files output_f
 
             doLast {
                 output_f.text = "#id\trmse (mm)\n"
 
-                project.list_file.eachLine { line ->
+                project.configurationEMA.list_basenames.each { line ->
                     // Load files
                     double[][] src =
-                        project.loading.loadFloatBinary("${project.referenceDir['ema']}/${line}.ema",
-                                                        project.channels.size()*3); // FIXME: hardcoded frame size
+                        project.configurationEMA.loading.loadFloatBinary("${project.configurationEMA.reference_dir['ema']}/${line}.ema",
+                                                        project.configurationEMA.channels.size()*3); // FIXME: hardcoded frame size
                     double[][] tgt =
-                        project.loading.loadFloatBinary("${project.synthesizeDir['ema']}/${line}.ema",
-                                                        project.channels.size()*3); // FIXME: hardcoded frame size
+                        project.configurationEMA.loading.loadFloatBinary("${project.configurationEMA.synthesize_dir['ema']}/${line}.ema",
+                                                        project.configurationEMA.channels.size()*3); // FIXME: hardcoded frame size
 
                     def nb_frames = Math.min(src.length, tgt.length)
 
 
                     // Compute and dump the distance
                     def alignment = new IDAlignment(nb_frames);
-                    def v = new RMS(src, tgt, project.channels.size()*3); // FIXME: hardcoded frame size
+                    def v = new RMS(src, tgt, project.configurationEMA.channels.size()*3); // FIXME: hardcoded frame size
                     Double d = v.distancePerUtterance(alignment);
                     output_f << "$line\t$d\n";
                 }
@@ -46,8 +46,8 @@ class EMAAnalysis implements AnalysisInterface
         project.task("computeEucDistEMA") {
 
             def output_handles = []
-            project.channels.each { c ->
-                output_handles << new File("${project.emaOutputDir}/euc_dist_${c}.csv")
+            project.configurationEMA.channels.each { c ->
+                output_handles << new File("${project.configurationEMA.output_dir}/euc_dist_${c}.csv")
                 outputs.files output_handles
             }
 
@@ -55,18 +55,18 @@ class EMAAnalysis implements AnalysisInterface
                 output_handles.each {f ->
                     f.text = "# euc. dist. (cm)\n"
                 }
-                project.list_file.eachLine { line ->
+                project.configurationEMA.list_basenames.each { line ->
                     // Load files
                     double[][] src =
-                        project.loading.loadFloatBinary("${project.referenceDir['ema']}/${line}.ema",
-                                                        project.channels.size()*3); // FIXME: hardcoded frame size
+                        project.configurationEMA.loading.loadFloatBinary("${project.configurationEMA.reference_dir['ema']}/${line}.ema",
+                                                        project.configurationEMA.channels.size()*3); // FIXME: hardcoded frame size
                     double[][] tgt =
-                        project.loading.loadFloatBinary("${project.synthesizeDir['ema']}/${line}.ema",
-                                                        project.channels.size()*3); // FIXME: hardcoded frame size
+                        project.configurationEMA.loading.loadFloatBinary("${project.configurationEMA.synthesize_dir['ema']}/${line}.ema",
+                                                        project.configurationEMA.channels.size()*3); // FIXME: hardcoded frame size
 
 
                     int nb_frames = Math.min(src.length, tgt.length)
-                    for (int j=0; j<project.channels.size()*3; j+=3)  // FIXME: hardcoded frame size
+                    for (int j=0; j<project.configurationEMA.channels.size()*3; j+=3)  // FIXME: hardcoded frame size
                     {
                         double[][] real_src = new double[nb_frames][3];
                         double[][] real_tgt = new double[nb_frames][3];

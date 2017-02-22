@@ -15,9 +15,6 @@ import org.gradle.api.tasks.bundling.Zip
 import static groovyx.gpars.GParsPool.runForkJoin
 import static groovyx.gpars.GParsPool.withPool
 
-import groovy.json.JsonBuilder
-import groovy.json.JsonSlurper
-
 import marytts.analysis.utils.LoadingHelpers;
 import marytts.analysis.Statistics;
 
@@ -33,31 +30,6 @@ class EMAEvaluationPlugin implements Plugin<Project>
 
         project.sourceCompatibility = JavaVersion.VERSION_1_7
 
-
-        // Load configuration
-        def slurper = new JsonSlurper()
-        def config_file = project.rootProject.ext.config_file
-        def config = slurper.parseText( config_file.text )
-
-        // Adapt pathes
-        DataFileFinder.project_path = new File(getClass().protectionDomain.codeSource.location.path).parent
-        if (config.data.project_dir) {
-            DataFileFinder.project_path = config.data.project_dir
-        }
-
-        // See for number of processes for parallel mode
-        def nb_proc_local = 1
-        if (project.gradle.startParameter.getMaxWorkerCount() != 0) {
-            nb_proc_local = Runtime.getRuntime().availableProcessors(); // By default the number of core
-            if (config.settings.nb_proc) {
-                if (config.settings.nb_proc > nb_proc_local) {
-                    throw Exception("You will overload your machine, preventing stop !")
-                }
-
-                nb_proc_local = config.settings.nb_proc
-            }
-        }
-
         (new File(project.rootProject.buildDir.toString() + "/EMAAnalysis")).mkdirs()
 
         project.ext {
@@ -68,9 +40,7 @@ class EMAEvaluationPlugin implements Plugin<Project>
 
             // FIXME: externalize that !
             list_file = new File(DataFileFinder.getFilePath("list_test"))
-            referenceDir = ["ema": "../extraction/build/ema"]
-            synthesizeDir = ["ema": "../synthesis/build/output/imposed_dur"]
-            channels = ["T3", "T2", "T1", "ref", "jaw", "upperlip", "lowerlip"]
+            channels =
 
             nb_proc = nb_proc_local;
 
@@ -102,21 +72,40 @@ class EMAEvaluationPlugin implements Plugin<Project>
         }
 
         project.afterEvaluate {
+
+            project.task("configurationEMA")  {
+                dependsOn "configuration"
+
+                // Input
+                ext.list_basenames = project.configuration.list_basenames ? project.configuration.list_basenames : []
+                ext.reference_dir = project.configuration.reference_dir ? project.configuration.reference_dir:[]
+                ext.synthesize_dir = project.configuration.synthesize_dir ? project.configuration.synthesize_dir:[]
+
+
+                // Some parameters
+                ext.channels = project.configuration.channels ? project.configuration.channels : []
+                ext.nb_proc = project.configuration.nb_proc ? project.configuration.nb_proc : 1
+
+                // Outputdir
+                ext.output_dir = new File(project.rootProject.buildDir.toString() + "/EMAAnalysis");
+
+                // Loading helping
+                ext.loading = new LoadingHelpers();
+            }
             (new EMAAnalysis()).addTasks(project)
 
 
             project.task("generateEMAReport") {
-                dependsOn "computeRMSEEMA", "computeEucDistEMA"
+                dependsOn "configurationEMA", "computeRMSEEMA", "computeEucDistEMA"
 
 
-                def input_rms_ema = new File("${project.emaOutputDir}/rms_ema.csv")
-
+                def input_rms_ema = project.computeRMSEEMA.output_f
                 def ema_input_file = []
                 project.channels.each { c ->
-                    ema_input_file << new File("${project.emaOutputDir}/euc_dist_${c}.csv")
+                    ema_input_file << new File("${project.configurationEMA.output_dir}/euc_dist_${c}.csv")
                 }
 
-                def output_f = new File("${project.emaOutputDir}/global_report.csv")
+                def output_f = new File("${project.configurationEMA.output_dir}/global_report.csv")
                 outputs.files output_f
 
                 doLast {
