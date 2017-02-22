@@ -1,4 +1,4 @@
-package de.dfki.mary.ttsanalysis.subparts
+package de.dfki.mary.emaevaluation.subparts
 
 import org.gradle.api.Project
 
