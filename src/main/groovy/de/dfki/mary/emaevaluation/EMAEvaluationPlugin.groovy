@@ -48,6 +48,7 @@ class EMAEvaluationPlugin implements Plugin<Project>
 
                 // Outputdir
                 ext.output_dir = new File(project.rootProject.buildDir.toString() + "/EMAAnalysis");
+                output_dir.mkdirs()
 
                 // Loading helping
                 ext.loading = new LoadingHelpers();
