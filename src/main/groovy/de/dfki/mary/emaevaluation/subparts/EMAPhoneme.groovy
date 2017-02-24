@@ -107,7 +107,7 @@ class EMAPhonemeAnalysis implements AnalysisInterface
                             prev_utt = elts[0]
                             if (weights_activated)
                             {
-                                src_weight = project.configurationEMA.loading.loadFloatBinary("${project.configurationEMA.reference_dir['weight']}", dim_weights);
+                                src_weight = project.configurationEMA.loading.loadFloatBinary("${project.configurationEMA.reference_dir['weight']}/${elts[0]}.weight", dim_weights);
                                 tgt_weight = project.configurationEMA.loading.loadFloatBinary("${project.configurationEMA.synthesize_dir['weight']}/${elts[0]}.weight", dim_weights);
                             }
                         }

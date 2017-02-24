@@ -40,15 +40,15 @@ class EMAEvaluationPlugin implements Plugin<Project>
                 ext.id_expe = project.configuration.hasProperty("id_expe") ? project.configuration.id_expe : null
 
                 // Input
-                ext.list_basenames = project.configuration.list_basenames ? project.configuration.list_basenames : []
-                ext.reference_dir = project.configuration.reference_dir ? project.configuration.reference_dir : []
-                ext.synthesize_dir = project.configuration.synthesize_dir ? project.configuration.synthesize_dir : []
+                ext.list_basenames = project.configuration.hasProperty("list_basenames") ? project.configuration.list_basenames : []
+                ext.reference_dir = project.configuration.hasProperty("reference_dir") ? project.configuration.reference_dir : []
+                ext.synthesize_dir = project.configuration.hasProperty("synthesize_dir") ? project.configuration.synthesize_dir : []
 
 
                 // Some parameters
-                ext.channels = project.configuration.channels ? project.configuration.channels : []
-                ext.channel_labels = project.configuration.channel_labels ? project.configuration.channel_labels : []
-                ext.nb_proc = project.configuration.nb_proc ? project.configuration.nb_proc : 1
+                ext.channels = project.configuration.hasProperty("channels") ? project.configuration.channels : []
+                ext.channel_labels = project.configuration.hasProperty("channel_labels") ? project.configuration.channel_labels : []
+                ext.nb_proc = project.configuration.hasProperty("nb_proc") ? project.configuration.nb_proc : 1
                 ext.weight_dim = project.configuration.hasProperty("weight_dim") ? project.configuration.weight_dim : null
                 ext.frameshift = project.configuration.hasProperty("frameshift") ? project.configuration.frameshift : 5
 
@@ -56,7 +56,7 @@ class EMAEvaluationPlugin implements Plugin<Project>
                 ext.map_phone2class = ["aa": "vowel", "ae": "vowel", "ah": "vowel", "an": "vowel", "ao": "vowel", "aw": "vowel", "ax": "vowel", "axr": "approximant", "ay": "vowel", "b": "labial", "ch": "coronal", "d": "coronal", "dh": "coronal", "eh": "vowel", "el": "coronal", "em": "labial", "en": "coronal", "er": "approximant", "ey": "vowel", "f": "labial", "g": "dorsal", "hh": "glottal", "ih": "vowel", "ix": "vowel", "iy": "vowel", "jh": "coronal", "k": "dorsal", "l": "coronal", "m": "labial", "n": "coronal", "ng": "dorsal", "oo": "vowel", "ow": "vowel", "oy": "vowel", "p": "labial", "pau": "silence", "r": "approximant", "s": "coronal", "sh": "coronal", "t": "coronal", "th": "coronal", "uh": "vowel", "ur": "approximant", "uw": "vowel", "v": "labial", "w": "labial", "y": "vowel", "z": "coronal", "zh": "coronal"]
 
                 // Outputdir
-                ext.output_dir = new File(project.rootProject.buildDir.toString() + "/EMAAnalysis");
+                ext.output_dir = new File(project.rootProject.buildDir.toString() + "/output/EMAAnalysis");
                 output_dir.mkdirs()
 
                 // Loading helping
