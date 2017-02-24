@@ -45,6 +45,7 @@ class EMAEvaluationPlugin implements Plugin<Project>
                 // Some parameters
                 ext.channels = project.configuration.channels ? project.configuration.channels : []
                 ext.nb_proc = project.configuration.nb_proc ? project.configuration.nb_proc : 1
+                ext.weight_dim = project.configuration.weight_dim ? Projec.configuration.weight_dim : null
 
                 // Outputdir
                 ext.output_dir = new File(project.rootProject.buildDir.toString() + "/EMAAnalysis");
@@ -53,11 +54,14 @@ class EMAEvaluationPlugin implements Plugin<Project>
                 // Loading helping
                 ext.loading = new LoadingHelpers();
             }
+
             (new EMAAnalysis()).addTasks(project)
+            (new EMAPhonemeAnalysis()).addTasks(project)
 
 
             project.task("generateEMAReport") {
-                dependsOn "configurationEMA", "computeRMSEEMA", "computeEucDistEMA"
+
+                dependsOn "configurationEMA", "computeRMSEEMA", "computeEucDistEMA", "JSON2RDS"
 
 
                 def input_rms_ema = project.computeRMSEEMA.output_f
