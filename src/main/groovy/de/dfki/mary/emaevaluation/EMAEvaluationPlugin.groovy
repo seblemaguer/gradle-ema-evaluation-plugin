@@ -68,7 +68,6 @@ class EMAEvaluationPlugin implements Plugin<Project>
 
 
             project.task("generateEMAReport") {
-
                 dependsOn "configurationEMA", "computeRMSEEMA", "computeEucDistEMA", "JSON2RDS"
 
 
@@ -78,14 +77,14 @@ class EMAEvaluationPlugin implements Plugin<Project>
                     ema_input_file << new File("${project.configurationEMA.output_dir}/euc_dist_${c}.csv")
                 }
 
-                def output_f = new File("${project.configurationEMA.output_dir}/global_report.csv")
-                outputs.files output_f
+                ext.output_f = new File("${project.configurationEMA.output_dir}/global_report.csv")
+                outputs.files ext.output_f
 
                 doLast {
                     def values = null
                     def dist = null
                     def s = null
-                    output_f.text = "#id\tmean\tstd\tconfint\n"
+                    ext.output_f.text = "#id\tmean\tstd\tconfint\n"
 
                     // RMS part
                     values = []
@@ -99,7 +98,7 @@ class EMAEvaluationPlugin implements Plugin<Project>
                     dist = new Double[values.size()];
                     values.toArray(dist);
                     s = new Statistics(dist);
-                    output_f << "rms ema\t" << s.mean() << "\t" << s.stddev() << "\t" << s.confint(0.05) << "\n"
+                    ext.output_f << "rms ema (cm)\t" << s.mean() << "\t" << s.stddev() << "\t" << s.confint(0.05) << "\n"
 
                     // Euclidian distances part
                     ema_input_file.eachWithIndex { c_file, i ->
@@ -114,7 +113,7 @@ class EMAEvaluationPlugin implements Plugin<Project>
                         dist = new Double[values.size()];
                         values.toArray(dist);
                         s = new Statistics(dist);
-                        output_f << "euc dist ${project.configurationEMA.channels[i]} (cm)\t" << s.mean() << "\t" << s.stddev() << "\t" << s.confint(0.05) << "\n"
+                        ext.output_f << "euc dist ${project.configurationEMA.channel_labels[i]} (cm)\t" << s.mean() << "\t" << s.stddev() << "\t" << s.confint(0.05) << "\n"
                     }
                 }
             }
