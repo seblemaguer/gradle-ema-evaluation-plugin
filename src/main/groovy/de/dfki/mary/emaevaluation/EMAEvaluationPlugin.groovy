@@ -68,7 +68,13 @@ class EMAEvaluationPlugin implements Plugin<Project>
 
 
             project.task("generateEMAReport") {
-                dependsOn "configurationEMA", "computeRMSEEMA", "computeEucDistEMA", "JSON2RDS"
+                dependsOn "configurationEMA"
+
+                // FIXME: kind of ugly for now :/
+                if (!project.configurationEMA.reference_dir.containsKey("ema")) {
+                    return;
+                }
+                dependsOn "computeRMSEEMA", "computeEucDistEMA", "JSON2RDS"
 
 
                 def input_rms_ema = project.computeRMSEEMA.output_f
