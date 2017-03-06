@@ -76,7 +76,7 @@ class EMAAnalysis implements AnalysisInterface
                             for (int k=0; k<3; k++)
                             {
                                 real_src[i][k] = src[i][j+k]
-                                real_tgt[i][k] = tgt[i][j+k] / 10 // FIXME: hardcoded mm => cm
+                                real_tgt[i][k] = tgt[i][j+k]
                             }
                         }
 
