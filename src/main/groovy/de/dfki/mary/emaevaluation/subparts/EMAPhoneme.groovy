@@ -1,5 +1,8 @@
 package de.dfki.mary.emaevaluation.subparts
 
+import static groovyx.gpars.GParsPool.runForkJoin
+import static groovyx.gpars.GParsPool.withPool
+
 import org.gradle.api.Project
 import java.util.regex.*
 import de.dfki.mary.ttsanalysis.AnalysisInterface
@@ -179,6 +182,52 @@ class EMAPhonemeAnalysis implements AnalysisInterface
                 // Now execute conversion
                 project.exec {
                     commandLine 'Rscript', script_file, "--input=$jsonFile", "--output=${ext.output_f}"
+                }
+            }
+        }
+
+        project.task("generateTikzExample") {
+            dependsOn "JSON2RDS"
+            def rds_file = project.JSON2RDS.output_f
+            ext.output_f = new File("${project.configurationEMA.output_dir}/example/tikz/")
+            ext.output_f.mkdirs()
+            doLast {
+
+
+                // Generate script
+                def script_file = File.createTempFile("plot_example", ".R");
+                this.getClass().getResource( 'plot_example.R' ).withInputStream { ris ->
+                    script_file.withOutputStream { fos ->
+                        fos << ris
+                    }
+                }
+
+                // Now execute conversion
+                withPool(project.configurationEMA.nb_proc) {
+                    project.configurationEMA.list_basenames.eachParallel { basename ->
+                        project.exec {
+                            commandLine 'Rscript', script_file, "--input=$rds_file", "--output=${ext.output_f}/${basename}.tex",
+                            "--labfilename=${project.configurationEMA.lab_dir}/${basename}.lab", "--utterance=$basename", "--width=8", "--height=5"
+                        }
+                    }
+                }
+            }
+        }
+
+        project.task("plotExample") {
+            dependsOn "generateTikzExample"
+            def rds_file = project.JSON2RDS.output_f
+            ext.output_f = new File("${project.configurationEMA.output_dir}/example/pdf/")
+            ext.output_f.mkdirs()
+            doLast {
+
+                // Now execute conversion
+                withPool(project.configurationEMA.nb_proc) {
+                    project.configurationEMA.list_basenames.eachParallel { basename ->
+                        project.exec {
+                            commandLine 'pdflatex', "-output-directory", "${ext.output_f}", "${project.generateTikzExample.output_f}/${basename}.tex"
+                        }
+                    }
                 }
             }
         }

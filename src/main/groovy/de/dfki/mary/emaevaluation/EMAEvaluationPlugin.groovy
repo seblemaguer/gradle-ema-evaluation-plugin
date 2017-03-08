@@ -43,7 +43,7 @@ class EMAEvaluationPlugin implements Plugin<Project>
                 ext.list_basenames = project.configuration.hasProperty("list_basenames") ? project.configuration.list_basenames : []
                 ext.reference_dir = project.configuration.hasProperty("reference_dir") ? project.configuration.reference_dir : []
                 ext.synthesize_dir = project.configuration.hasProperty("synthesize_dir") ? project.configuration.synthesize_dir : []
-
+                ext.lab_dir = project.configuration.hasProperty("lab_dir") ? project.configuration.lab_dir : []
 
                 // Some parameters
                 ext.channels = project.configuration.hasProperty("channels") ? project.configuration.channels : []
@@ -74,7 +74,7 @@ class EMAEvaluationPlugin implements Plugin<Project>
                 if (!project.configurationEMA.reference_dir.containsKey("ema")) {
                     return;
                 }
-                dependsOn "computeRMSEEMA", "computeEucDistEMA", "JSON2RDS"
+                dependsOn "computeRMSEEMA", "computeEucDistEMA", "plotExample"
 
 
                 def input_rms_ema = project.computeRMSEEMA.output_f
