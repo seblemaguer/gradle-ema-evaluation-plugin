@@ -74,13 +74,17 @@ class EMAEvaluationPlugin implements Plugin<Project>
                 if (!project.configurationEMA.reference_dir.containsKey("ema")) {
                     return;
                 }
-                dependsOn "computeRMSEEMA", "computeEucDistEMA", "plotExample"
+                dependsOn "computeRMSEEMA", "computeEucDistEMA", "computeEucDistEMAWithoutSilence", "plotExample"
 
 
                 def input_rms_ema = project.computeRMSEEMA.output_f
                 def ema_input_file = []
                 project.configurationEMA.channels.each { c ->
                     ema_input_file << new File("${project.configurationEMA.output_dir}/euc_dist_${c}.csv")
+                }
+                def ema_input_no_sil_file = []
+                project.configurationEMA.channels.each { c ->
+                    ema_input_no_sil_file << new File("${project.configurationEMA.output_dir}/euc_dist_no_sil_${c}.csv")
                 }
 
                 ext.output_f = new File("${project.configurationEMA.output_dir}/global_report.csv")
@@ -90,7 +94,7 @@ class EMAEvaluationPlugin implements Plugin<Project>
                     def values = null
                     def dist = null
                     def s = null
-                    ext.output_f.text = "#id\tmean\tstd\tconfint\n"
+                    ext.output_f.text = "#id\tmean\tstd\tconfint\tnb_values\n"
 
                     // RMS part
                     values = []
@@ -104,7 +108,10 @@ class EMAEvaluationPlugin implements Plugin<Project>
                     dist = new Double[values.size()];
                     values.toArray(dist);
                     s = new Statistics(dist);
-                    ext.output_f << "rms ema (cm)\t" << s.mean() << "\t" << s.stddev() << "\t" << s.confint(0.05) << "\n"
+                    ext.output_f << "rms ema (cm)" << "\t"
+                    ext.output_f << s.mean() << "\t" << s.stddev() << "\t" << s.confint(0.05) << "\t"
+                    ext.output_f << values.size() << "\n"
+
 
                     // Euclidian distances part
                     ema_input_file.eachWithIndex { c_file, i ->
@@ -119,7 +126,28 @@ class EMAEvaluationPlugin implements Plugin<Project>
                         dist = new Double[values.size()];
                         values.toArray(dist);
                         s = new Statistics(dist);
-                        ext.output_f << "euc dist ${project.configurationEMA.channel_labels[i]} (cm)\t" << s.mean() << "\t" << s.stddev() << "\t" << s.confint(0.05) << "\n"
+                        ext.output_f << "euc dist ${project.configurationEMA.channel_labels[i]} (cm)" << "\t"
+                        ext.output_f << s.mean() << "\t" << s.stddev() << "\t" << s.confint(0.05) << "\t"
+                        ext.output_f << values.size() << "\n"
+                    }
+
+
+                    // Euclidian distances part
+                    ema_input_no_sil_file.eachWithIndex { c_file, i ->
+
+                        values = []
+                        c_file.eachLine { line ->
+                            if (line.startsWith("#"))
+                                return; // Continue...
+
+                                values << Double.parseDouble(line)
+                        }
+                        dist = new Double[values.size()];
+                        values.toArray(dist);
+                        s = new Statistics(dist);
+                        ext.output_f << "euc dist ${project.configurationEMA.channel_labels[i]} without sil (cm)" << "\t"
+                        ext.output_f << s.mean() << "\t" << s.stddev() << "\t" << s.confint(0.05) << "\t"
+                        ext.output_f << values.size() << "\n"
                     }
                 }
             }

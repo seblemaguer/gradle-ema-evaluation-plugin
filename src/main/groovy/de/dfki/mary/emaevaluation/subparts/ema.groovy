@@ -90,5 +90,81 @@ class EMAAnalysis implements AnalysisInterface
                 }
             }
         }
+
+
+        project.task('computeEucDistEMAWithoutSilence') {
+            dependsOn "configurationEMA"
+
+            def output_handles = []
+            project.configurationEMA.channels.each { c ->
+                output_handles << new File("${project.configurationEMA.output_dir}/euc_dist_no_sil_${c}.csv")
+                outputs.files output_handles
+            }
+
+            doLast {
+                output_handles.each {f ->
+                    f.text = "# euc. dist. (cm)\n"
+                }
+
+
+
+                project.configurationEMA.list_basenames.each { line ->
+
+                    // FIXME: stupid weight again
+                    double[][] src;
+                    double[][] tgt;
+                    src = project.configurationEMA.loading.loadFloatBinary("${project.configurationEMA.reference_dir['ema']}/${line}.ema", project.configurationEMA.channels.size()*3); // FIXME: hardcoded frame size
+                    tgt = project.configurationEMA.loading.loadFloatBinary("${project.configurationEMA.synthesize_dir['ema']}/${line}.ema", project.configurationEMA.channels.size()*3); // FIXME: hardcoded frame size
+
+                    // Compute size
+                    def ref_dur_list = []
+                    int nb_frames = 0
+                    (new File("${project.configurationEMA.lab_dir}/${line}.lab")).eachLine { label -> // FIXME: hardcoded reference name
+                        def elts = label.split()
+
+                        if (elts[2] != "pau")
+                        {
+                            def start = (elts[0].toInteger() / (10000 * 5)).intValue()
+                            def end = (elts[1].toInteger() / (10000 * 5)).intValue()
+                            nb_frames = nb_frames + (end-start)
+                        }
+                    }
+
+                    for (int j=0; j<project.configurationEMA.channels.size()*3; j+=3)
+                    {
+                        double[][] real_src = new double[nb_frames][3];
+                        double[][] real_tgt = new double[nb_frames][3];
+                        int start_offset = 0;
+
+                        (new File("${project.configurationEMA.lab_dir}/${line}.lab")).eachLine { label -> // FIXME: hardcoded reference name
+                            def elts = label.split()
+
+                            if (elts[2] != "pau")
+                            {
+                                def start = (elts[0].toInteger() / (10000 * 5)).intValue()
+                                def end = (elts[1].toInteger() / (10000 * 5)).intValue()
+                                int cur_nb_frames = end - start;
+                                for (int i=0; i<cur_nb_frames; i++)
+                                {
+                                    for (int k=0; k<3; k++)
+                                    {
+                                        real_src[start_offset+i][k] = src[start_offset+i][j+k]
+                                        real_tgt[start_offset+i][k] = tgt[start_offset+i][j+k]
+                                    }
+                                }
+
+                                start_offset = start_offset + cur_nb_frames
+                            }
+                        }
+
+                        def v = new EuclidianDistance(real_src, real_tgt, 3); // FIXME: hardcoded stuff
+                        for (int i=0; i<nb_frames; i++)
+                        {
+                            output_handles[(j/3).intValue()] << v.distancePerFrame(i, i) << "\n"
+                        }
+                    }
+                }
+            }
+        }
     }
 }

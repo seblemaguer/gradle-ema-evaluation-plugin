@@ -35,7 +35,7 @@ class EMAPhonemeAnalysis implements AnalysisInterface
 
                         // Loading first label
                         def ref_dur_list = []
-                        (new File("${project.configurationEMA.reference_dir['dur']}/${line}.lab")).eachLine { label -> // FIXME: hardcoded reference name
+                        (new File("${project.configurationEMA.lab_dir}/${line}.lab")).eachLine { label -> // FIXME: hardcoded reference name
                             def elts = label.split()
 
                             def start = (elts[0].toInteger() / (10000 * 5)).intValue()
