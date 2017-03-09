@@ -52,7 +52,7 @@ class EMAPhonemeAnalysis implements AnalysisInterface
                                     for (int k=0; k<3; k++)
                                     {
                                         real_src[i][k] = src[i][j+k]
-                                        real_tgt[i][k] = tgt[i][j+k] / 10
+                                        real_tgt[i][k] = tgt[i][j+k]
                                     }
                                 }
 
@@ -134,8 +134,8 @@ class EMAPhonemeAnalysis implements AnalysisInterface
                         val[elts[0]][id_frame]["coils"][elts[3]] = [:]
                         ["x", "y", "z"].eachWithIndex { pos, idx ->
                             val[elts[0]][id_frame]["coils"][elts[3]][pos] = [:]
-                            val[elts[0]][id_frame]["coils"][elts[3]][pos]["natural"] = src[id_frame][project.configurationEMA.channels.indexOf(elts[3])*3+idx]
-                            val[elts[0]][id_frame]["coils"][elts[3]][pos][project.configurationEMA.id_expe] = tgt[id_frame][project.configurationEMA.channels.indexOf(elts[3])*3+idx]
+                            val[elts[0]][id_frame]["coils"][elts[3]][pos]["natural"] = src[id_frame][project.configurationEMA.channel_labels.indexOf(elts[3])*3+idx]
+                            val[elts[0]][id_frame]["coils"][elts[3]][pos][project.configurationEMA.id_expe] = tgt[id_frame][project.configurationEMA.channel_labels.indexOf(elts[3])*3+idx]
 
                         }
 
@@ -153,7 +153,7 @@ class EMAPhonemeAnalysis implements AnalysisInterface
                 def output_list = []
                 val.each {utt, frames ->
                     frames.eachWithIndex {frame, id_frame ->
-                        def tmp = ["utterance":utt, "frame":id_frame, "time":id_frame*project.configurationEMA.frameshift] + frame // FIXME: frameshift should be a parameter
+                        def tmp = ["utterance":utt, "frame":id_frame, "time":id_frame*project.configurationEMA.frameshift*0.001] + frame // FIXME: frameshift should be a parameter
                         output_list << tmp
                     }
                 }
@@ -202,10 +202,17 @@ class EMAPhonemeAnalysis implements AnalysisInterface
                     }
                 }
 
+
                 // Now execute conversion
+                def dummyOutputStream = new OutputStream() {
+                    @Override
+                    public void write(int b) {}
+                }
                 withPool(project.configurationEMA.nb_proc) {
                     project.configurationEMA.list_basenames.eachParallel { basename ->
                         project.exec {
+
+                            standardOutput = dummyOutputStream
                             commandLine 'Rscript', script_file, "--input=$rds_file", "--output=${ext.output_f}/${basename}.tex",
                             "--labfilename=${project.configurationEMA.lab_dir}/${basename}.lab", "--utterance=$basename", "--width=8", "--height=5"
                         }
@@ -221,10 +228,16 @@ class EMAPhonemeAnalysis implements AnalysisInterface
             ext.output_f.mkdirs()
             doLast {
 
+                def dummyOutputStream = new OutputStream() {
+                    @Override
+                    public void write(int b) {}
+                }
                 // Now execute conversion
                 withPool(project.configurationEMA.nb_proc) {
                     project.configurationEMA.list_basenames.eachParallel { basename ->
                         project.exec {
+
+                            standardOutput = dummyOutputStream
                             commandLine 'pdflatex', "-output-directory", "${ext.output_f}", "${project.generateTikzExample.output_f}/${basename}.tex"
                         }
                     }
