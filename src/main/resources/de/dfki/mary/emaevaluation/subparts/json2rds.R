@@ -19,9 +19,10 @@ args <- docopt(doc)
 # load data (flattened)
 data.flat <- fromJSON(args$input, flatten = TRUE)
 
-# drop weights
+# drop weights (FIXME: hardcoded!)
 data.flat$phonemeWeights.natural <- NULL
 data.flat$phonemeWeights.mngu0_weights <- NULL
+data.flat$phonemeWeights.mngu0_weights_dnn <- NULL
 
 # restructure data
 data <- data.flat %>%
