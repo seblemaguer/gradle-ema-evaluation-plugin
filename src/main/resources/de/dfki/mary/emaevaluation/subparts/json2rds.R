@@ -28,6 +28,7 @@ data.flat$phonemeWeights.mngu0_weights_dnn <- NULL
 data <- data.flat %>%
   gather(key, value, -utterance, -frame, -time, -phone, -phone_class) %>%
     separate(key, into = c("ignore", "coil", "axis", "type"), sep = "\\.")
+
 # drop redundant column
 data$ignore <- NULL
 
@@ -36,8 +37,8 @@ data$utterance <- as.factor(data$utterance)
 data$phone <- as.factor(data$phone)
 data$phone_class<- as.factor(data$phone_class)
 data$coil <- as.factor(data$coil)
-data$axis <- revalue(as.factor(data$axis), c("distances" = "distance"))
-data$type <- revalue(as.factor(data$type), c("euclidian" = "Euclidean"))
+data$axis <- revalue(as.factor(data$axis), c("euc_static" = "Euc. dist.", "euc_dyn" = "Euc. dyn."))
+data$type <- as.factor(data$type) #revalue(as.factor(data$type), c("euclidian" = "Euclidean"))
 
 # serialize to file
 saveRDS(data, args$output)

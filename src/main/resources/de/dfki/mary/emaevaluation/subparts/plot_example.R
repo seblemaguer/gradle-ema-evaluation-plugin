@@ -23,7 +23,8 @@ args <- docopt(doc)
 data.all <- readRDS(args$input)
 data <- subset(data.all,
   utterance == args$utterance &
-  coil %in% c("T1", "T2", "T3"))
+  coil %in% c("T1", "T2", "T3") &
+  type != "euc_dyn")
 
 # Load segmentation
 lab_filename <- args$labfilename
@@ -47,10 +48,11 @@ if (nrow(segments[segments$label %in% c("g"),]) > 0) {
 }
 int_seg <- subset(segments, !(class %in% c("useless")))
 
+print(data)
 # plot
 p <- ggplot(data) +
-    scale_colour_manual(values=c("red", "blue", "green"),
-                        labels=c("Euclidean distance", "predicted", "observed")) +
+    scale_colour_manual(values=c("red", "blue", "chartreuse4"),
+                        labels=c("Euclidean dist.", "predicted", "observed")) +
     geom_line(aes(x=time, y=value, color = type)) +
     scale_fill_brewer(palette="Set1") +
     geom_rect(inherit.aes = FALSE,

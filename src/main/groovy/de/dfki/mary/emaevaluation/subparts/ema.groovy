@@ -46,7 +46,7 @@ class EMAAnalysis implements AnalysisInterface
         project.task("computeEucDistEMA") {
 
             def output_handles = []
-            project.configurationEMA.channels.each { c ->
+            project.configurationEMA.channel_labels.each { c ->
                 output_handles << new File("${project.configurationEMA.output_dir}/euc_dist_${c}.csv")
                 outputs.files output_handles
             }
@@ -96,7 +96,7 @@ class EMAAnalysis implements AnalysisInterface
             dependsOn "configurationEMA"
 
             def output_handles = []
-            project.configurationEMA.channels.each { c ->
+            project.configurationEMA.channel_labels.each { c ->
                 output_handles << new File("${project.configurationEMA.output_dir}/euc_dist_no_sil_${c}.csv")
                 outputs.files output_handles
             }

@@ -65,6 +65,8 @@ class EMAEvaluationPlugin implements Plugin<Project>
 
             (new EMAAnalysis()).addTasks(project)
             (new EMAPhonemeAnalysis()).addTasks(project)
+            (new EMADynamicAnalysis()).addTasks(project)
+            (new EMASummaryAnalysis()).addTasks(project)
 
 
             project.task("generateEMAReport") {
@@ -74,17 +76,29 @@ class EMAEvaluationPlugin implements Plugin<Project>
                 if (!project.configurationEMA.reference_dir.containsKey("ema")) {
                     return;
                 }
-                dependsOn "computeRMSEEMA", "computeEucDistEMA", "computeEucDistEMAWithoutSilence", "plotExample"
 
+                // FIXME: hardcoded !
+                dependsOn "computeRMSEEMA", "computeEucDistEMA", "computeEucDistEMAWithoutSilence"
+                dependsOn "computeRMSEEMADyn", "computeRMSEEMADynWithoutSilence"
+                dependsOn "plotExample"
 
                 def input_rms_ema = project.computeRMSEEMA.output_f
                 def ema_input_file = []
-                project.configurationEMA.channels.each { c ->
+                project.configurationEMA.channel_labels.each { c ->
                     ema_input_file << new File("${project.configurationEMA.output_dir}/euc_dist_${c}.csv")
                 }
                 def ema_input_no_sil_file = []
-                project.configurationEMA.channels.each { c ->
+                project.configurationEMA.channel_labels.each { c ->
                     ema_input_no_sil_file << new File("${project.configurationEMA.output_dir}/euc_dist_no_sil_${c}.csv")
+                }
+
+                def ema_dyn_input_file = []
+                project.configurationEMA.channel_labels.each { c ->
+                    ema_dyn_input_file << new File("${project.configurationEMA.output_dir}/rmse_dyn_${c}.csv")
+                }
+                def ema_dyn_input_no_sil_file = []
+                project.configurationEMA.channel_labels.each { c ->
+                    ema_dyn_input_no_sil_file << new File("${project.configurationEMA.output_dir}/rmse_dyn_no_sil_${c}.csv")
                 }
 
                 ext.output_f = new File("${project.configurationEMA.output_dir}/global_report.csv")
@@ -146,6 +160,46 @@ class EMAEvaluationPlugin implements Plugin<Project>
                         values.toArray(dist);
                         s = new Statistics(dist);
                         ext.output_f << "euc dist ${project.configurationEMA.channel_labels[i]} without sil (cm)" << "\t"
+                        ext.output_f << s.mean() << "\t" << s.stddev() << "\t" << s.confint(0.05) << "\t"
+                        ext.output_f << values.size() << "\n"
+                    }
+
+
+
+
+                    // Euclidian distances part
+                    ema_dyn_input_file.eachWithIndex { c_file, i ->
+
+                        values = []
+                        c_file.eachLine { line ->
+                            if (line.startsWith("#"))
+                                return; // Continue...
+
+                                values << Double.parseDouble(line)
+                        }
+                        dist = new Double[values.size()];
+                        values.toArray(dist);
+                        s = new Statistics(dist);
+                        ext.output_f << "RMSE ${project.configurationEMA.channel_labels[i]} (dyn)" << "\t"
+                        ext.output_f << s.mean() << "\t" << s.stddev() << "\t" << s.confint(0.05) << "\t"
+                        ext.output_f << values.size() << "\n"
+                    }
+
+
+                    // Euclidian distances part
+                    ema_dyn_input_no_sil_file.eachWithIndex { c_file, i ->
+
+                        values = []
+                        c_file.eachLine { line ->
+                            if (line.startsWith("#"))
+                                return; // Continue...
+
+                                values << Double.parseDouble(line)
+                        }
+                        dist = new Double[values.size()];
+                        values.toArray(dist);
+                        s = new Statistics(dist);
+                        ext.output_f << "RMSE ${project.configurationEMA.channel_labels[i]} without sil (dyn)" << "\t"
                         ext.output_f << s.mean() << "\t" << s.stddev() << "\t" << s.confint(0.05) << "\t"
                         ext.output_f << values.size() << "\n"
                     }
